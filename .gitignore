@@ -1,0 +1,4 @@
+__pycache__
+.env
+token.json
+code_verifier.txt

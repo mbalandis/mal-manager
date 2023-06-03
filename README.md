@@ -25,7 +25,7 @@
 
 - Local
   - `pip install -r requirements.txt`
-  - `python mal.py`
+  - `python mal.py` (first time auth)
 
 - Refresh token by running one of these:
 - `docker exec -i mal-manager python mal.py --refresh`

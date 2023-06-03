@@ -1,3 +1,4 @@
+from pathlib import Path
 import secrets
 import requests
 import json
@@ -8,7 +9,6 @@ from dotenv import load_dotenv
 import colorama
 from colorama import Fore, Back
 colorama.init(autoreset=True)
-from pathlib import Path
 
 load_dotenv()
 
@@ -68,7 +68,8 @@ def generate_new_token(authorisation_code: str, code_verifier: str) -> dict:
     expires_in = token['expires_in']
     expires_at = now + timedelta(seconds=expires_in)
 
-    token_expire = {'expires_at': expires_at.timestamp(), 'expires_at_h': str(expires_at)}
+    token_expire = {'expires_at': expires_at.timestamp(),
+                    'expires_at_h': str(expires_at)}
     token = dict(token_expire, **token)
 
     with open(dir_path / "token.json", 'w') as file:
@@ -77,6 +78,7 @@ def generate_new_token(authorisation_code: str, code_verifier: str) -> dict:
     return token
 
 # 4. Test the API by requesting your profile information
+
 
 def print_user_info(access_token: str):
     url = 'https://api.myanimelist.net/v2/users/@me'
@@ -90,6 +92,7 @@ def print_user_info(access_token: str):
 
     print(Fore.GREEN + f"\n>>> Greetings {user['name']}! <<<")
 
+
 def refresh_token() -> dict:
     with open(dir_path / "token.json", 'r') as f:
         data = json.load(f)
@@ -101,38 +104,39 @@ def refresh_token() -> dict:
     expires_at_h = data['expires_at_h']
 
     if datetime.utcfromtimestamp(expires_at) <= datetime.now():
-       print("Expires at is in the past")
+        print("Expires at is in the past")
 
-       url = 'https://myanimelist.net/v1/oauth2/token'
-       data = {
-           'client_id': CLIENT_ID,
-           'client_secret': CLIENT_SECRET,
-           'grant_type': 'refresh_token',
-           'refresh_token': data['refresh_token']
-       }
+        url = 'https://myanimelist.net/v1/oauth2/token'
+        data = {
+            'client_id': CLIENT_ID,
+            'client_secret': CLIENT_SECRET,
+            'grant_type': 'refresh_token',
+            'refresh_token': data['refresh_token']
+        }
 
-       response = requests.post(url, data)
-       response.raise_for_status()  # Check whether the request contains errors
+        response = requests.post(url, data)
+        response.raise_for_status()  # Check whether the request contains errors
 
-       token = response.json()
-       response.close()
-       print(Back.GREEN + 'Token refreshed successfully!')
+        token = response.json()
+        response.close()
+        print(Back.GREEN + 'Token refreshed successfully!')
 
-       with open(dir_path / "token.json", 'r') as file:
-          json.dump(token, file, indent=4)
+        with open(dir_path / "token.json", 'r') as file:
+            json.dump(token, file, indent=4)
 
-       data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at}
-       token_plus = dict(data_expire, **token)
+        data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at}
+        token_plus = dict(data_expire, **token)
 
-       return token_plus
+        return token_plus
 
     else:
-       print("Expires at is in the future (no need to refresh yet)")
+        print("Expires at is in the future (no need to refresh yet)")
 
-       data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at_h}
-       data = dict(data_expire, **data)
+        data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at_h}
+        data = dict(data_expire, **data)
 
-       return data
+        return data
+
 
 def main():
     parser = argparse.ArgumentParser(

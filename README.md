@@ -1,1 +1,1 @@
-# ec2-server-backup
+# MAL Manager

@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  mal-manager:
+    container_name: mal-manager
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "${SERVER_PORT_HOST-7777}:${SERVER_PORT_GUEST-7777}"
+    command: ["python", "main.py"]

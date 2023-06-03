@@ -16,7 +16,7 @@
 
 - Clone this repo on your computer or server.
 
-- Copy .env.example .env and fill the information.
+- Copy .env.example to .env and fill the information.
   - `APP_TOKEN=mysupersecuretoken` is just whatever you want and will be used as Bearer for POST request.
 
 - Docker (recommended)

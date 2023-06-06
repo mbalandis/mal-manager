@@ -3,7 +3,7 @@ version: "3.9"
 services:
   mal-manager:
     container_name: mal-manager
-    build: ./
+    build: .
     volumes:
       - .:/app
     ports:

@@ -3,9 +3,26 @@ version: "3.9"
 services:
   mal-manager:
     container_name: mal-manager
+    restart: unless-stopped
     build: .
     volumes:
       - .:/app
     ports:
       - "${SERVER_PORT_HOST-7777}:${SERVER_PORT_GUEST-7777}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mal-manager.entrypoints=http"
+      - "traefik.http.routers.mal-manager.rule=Host(`${APP_URL}`)"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.mal-manager.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.mal-manager-secure.entrypoints=https"
+      - "traefik.http.routers.mal-manager-secure.rule=Host(`${APP_URL}`)"
+      - "traefik.http.services.mal-manager.loadbalancer.server.port=${SERVER_PORT_GUEST-7777}"
+      - "traefik.http.routers.mal-manager-secure.tls=true"
+    networks:
+      - proxy
     command: ["python", "main.py"]
+networks:
+  proxy:
+    external: true

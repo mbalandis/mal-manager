@@ -97,44 +97,47 @@ def refresh_token() -> dict:
     with open(dir_path / "token.json", 'r') as f:
         data = json.load(f)
 
-    # Current date and time in UTC
     now = datetime.utcnow()
-    expires_in = data['expires_in']
-    expires_at = data['expires_at']
-    expires_at_h = data['expires_at_h']
+    # Set a default for expires_in in case it's not in data
+    expires_in = data.get('expires_in', 3600)  # Default to 1 hour
 
-    if datetime.utcfromtimestamp(expires_at) <= datetime.now():
-        print("Expires at is in the past")
+    # Calculate 'expires_at' and 'expires_at_h' if not present in data
+    expires_at = data.get('expires_at', (now + timedelta(seconds=expires_in)).timestamp())
+    expires_at_h = data.get('expires_at_h', str(now + timedelta(seconds=expires_in)))
+
+    if datetime.utcfromtimestamp(expires_at) <= now:
+        print("Token expired, refreshing...")
 
         url = 'https://myanimelist.net/v1/oauth2/token'
-        data = {
+        refresh_data = {
             'client_id': CLIENT_ID,
             'client_secret': CLIENT_SECRET,
             'grant_type': 'refresh_token',
             'refresh_token': data['refresh_token']
         }
 
-        response = requests.post(url, data)
-        response.raise_for_status()  # Check whether the request contains errors
+        response = requests.post(url, refresh_data)
+        response.raise_for_status()
 
-        token = response.json()
+        new_token = response.json()
         response.close()
-        print(Back.GREEN + 'Token refreshed successfully!')
 
-        with open(dir_path / "token.json", 'r') as file:
-            json.dump(token, file, indent=4)
+        # Update the expiration time in the new token
+        new_expires_at = now + timedelta(seconds=new_token['expires_in'])
+        new_token['expires_at'] = new_expires_at.timestamp()
+        new_token['expires_at_h'] = str(new_expires_at)
 
-        data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at}
-        token_plus = dict(data_expire, **token)
+        with open(dir_path / "token.json", 'w') as file:
+            json.dump(new_token, file, indent=4)
 
-        return token_plus
+        print('Token refreshed successfully!')
+        return new_token
 
     else:
-        print("Expires at is in the future (no need to refresh yet)")
-
-        data_expire = {'expires_at': expires_at, 'expires_at_h': expires_at_h}
-        data = dict(data_expire, **data)
-
+        print("Token is still valid, no need to refresh.")
+        # Ensure the existing data has the necessary keys
+        data['expires_at'] = expires_at
+        data['expires_at_h'] = expires_at_h
         return data
 
 
